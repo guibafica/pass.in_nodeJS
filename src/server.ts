@@ -20,38 +20,47 @@ const prisma = new PrismaClient({
 
 app.get("/", () => "Hello world");
 
-app.withTypeProvider<ZodTypeProvider>().post("/events", async (req, res) => {
-  const createEventSchema = z.object({
-    title: z.string().min(4),
-    details: z.string().nullable(),
-    maximumAttendees: z.number().int().positive().nullable(),
-  });
-
-  const data = createEventSchema.parse(req.body);
-
-  const slug = generateSlug(data.title);
-
-  const eventWithSameSlug = await prisma.event.findUnique({
-    where: {
-      slug,
+app.withTypeProvider<ZodTypeProvider>().post(
+  "/events",
+  {
+    schema: {
+      body: z.object({
+        title: z.string().min(4),
+        details: z.string().nullable(),
+        maximumAttendees: z.number().int().positive().nullable(),
+      }),
+      response: {
+        // 201
+      },
     },
-  });
+  },
+  async (req, res) => {
+    const data = req.body;
 
-  if (eventWithSameSlug !== null) {
-    throw new Error("Another event with same title already exists");
+    const slug = generateSlug(data.title);
+
+    const eventWithSameSlug = await prisma.event.findUnique({
+      where: {
+        slug,
+      },
+    });
+
+    if (eventWithSameSlug !== null) {
+      throw new Error("Another event with same title already exists");
+    }
+
+    const event = await prisma.event.create({
+      data: {
+        title: data.title,
+        details: data.details,
+        maximunAttendees: data.maximumAttendees,
+        slug,
+      },
+    });
+
+    return res.status(201).send({ eventId: event.id });
   }
-
-  const event = await prisma.event.create({
-    data: {
-      title: data.title,
-      details: data.details,
-      maximunAttendees: data.maximumAttendees,
-      slug,
-    },
-  });
-
-  return res.status(201).send({ eventId: event.id });
-});
+);
 
 app.listen({ port: 3333 }).then(() => {
   console.log("🚀 HTTP server running! 🚀");
