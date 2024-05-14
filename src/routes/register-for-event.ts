@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { ZodTypeProvider } from "fastify-type-provider-zod";
-import { z } from "zod";
+import { promise, z } from "zod";
 
 import { prisma } from "../lib/prisma";
 
@@ -40,17 +40,19 @@ export async function registerForEvent(app: FastifyInstance) {
         throw new Error("This e-mail is already registered for this event");
       }
 
-      const amountOfAttendeesForEvent = await prisma.attendee.count({
-        where: {
-          eventId,
-        },
-      });
+      const [event, amountOfAttendeesForEvent] = await Promise.all([
+        prisma.event.findUnique({
+          where: {
+            id: eventId,
+          },
+        }),
 
-      const event = await prisma.event.findUnique({
-        where: {
-          id: eventId,
-        },
-      });
+        prisma.attendee.count({
+          where: {
+            eventId,
+          },
+        }),
+      ]);
 
       if (
         event?.maximunAttendees &&
