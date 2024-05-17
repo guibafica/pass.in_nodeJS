@@ -41,7 +41,17 @@ export async function getEventAttendees(app: FastifyInstance) {
         skip: pageIndex * 10,
       });
 
-      return res.send({ attendees });
+      return res.send({
+        attendees: attendees.map((attendee) => {
+          return {
+            id: attendee.id,
+            name: attendee.name,
+            email: attendee.email,
+            createdAt: attendee.createdAt,
+            checkInAt: attendee.CheckIn?.createdAt,
+          };
+        }),
+      });
     }
   );
 }
