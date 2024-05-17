@@ -13,14 +13,27 @@ export async function getEventAttendees(app: FastifyInstance) {
           eventId: z.string().uuid(),
         }),
         querystring: z.object({
-          pageIndex: z.string().nullable().default("0").transform(Number),
+          query: z.string().nullish(),
+          pageIndex: z.string().nullish().default("0").transform(Number),
         }),
-        response: {},
+        response: {
+          200: z.object({
+            attendees: z.array(
+              z.object({
+                id: z.number(),
+                name: z.string(),
+                email: z.string().email(),
+                createdAt: z.date(),
+                checkInAt: z.date().nullable(),
+              })
+            ),
+          }),
+        },
       },
     },
     async (req, res) => {
       const { eventId } = req.params;
-      const { pageIndex } = req.query;
+      const { pageIndex, query } = req.query;
 
       const attendees = await prisma.attendee.findMany({
         select: {
@@ -34,11 +47,21 @@ export async function getEventAttendees(app: FastifyInstance) {
             },
           },
         },
-        where: {
-          eventId,
-        },
+        where: query
+          ? {
+              eventId,
+              name: {
+                contains: query,
+              },
+            }
+          : {
+              eventId,
+            },
         take: 10,
         skip: pageIndex * 10,
+        orderBy: {
+          createdAt: "desc",
+        },
       });
 
       return res.send({
@@ -48,7 +71,7 @@ export async function getEventAttendees(app: FastifyInstance) {
             name: attendee.name,
             email: attendee.email,
             createdAt: attendee.createdAt,
-            checkInAt: attendee.CheckIn?.createdAt,
+            checkInAt: attendee.CheckIn?.createdAt ?? null,
           };
         }),
       });
