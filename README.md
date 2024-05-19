@@ -28,9 +28,11 @@ This is an API project, build with NodeJS, which simulates an event manager. In 
   - List an attendee's badge information.
   - Create the attendee check-in.
 
-<!-- ## Used Techs
+## Used Techs
 
-- Framework ( Spring ): It establishes a series of standards and facilitates the development of new applications. -->
+- Fastify: A web framework highly focused on providing the best developer experience with the least overhead and a powerful plugin architecture. A micro framework for node that handles routes.
+- Prisma: Is a next-generation Node.js and TypeScript ORM.
+- Fastify-swagger: Is a plugin for the Fastify framework, which is used to automatically generate API documentation in Swagger format.
 
 # Author
 
