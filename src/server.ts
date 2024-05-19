@@ -7,6 +7,8 @@ import {
   jsonSchemaTransform,
 } from "fastify-type-provider-zod";
 
+import { errorHandler } from "./error-handler";
+
 import { createEvent } from "./routes/create-event";
 import { registerForEvent } from "./routes/register-for-event";
 import { getEvent } from "./routes/get-event";
@@ -43,6 +45,8 @@ app.register(getEvent);
 app.register(getAttendeeBadge);
 app.register(checkIn);
 app.register(getEventAttendees);
+
+app.setErrorHandler(errorHandler);
 
 app.get("/", () => "Hello world");
 

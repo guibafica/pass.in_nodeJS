@@ -4,6 +4,7 @@ import { FastifyInstance } from "fastify";
 
 import { generateSlug } from "../utils/generate-slug";
 import { prisma } from "../lib/prisma";
+import { BadRequest } from "./_errors/bad-request";
 
 export async function createEvent(app: FastifyInstance) {
   app.withTypeProvider<ZodTypeProvider>().post(
@@ -13,7 +14,9 @@ export async function createEvent(app: FastifyInstance) {
         summary: "Create an event",
         tags: ["events"],
         body: z.object({
-          title: z.string().min(4),
+          title: z
+            .string({ invalid_type_error: "The title must be a text" })
+            .min(4),
           details: z.string().nullable(),
           maximumAttendees: z.number().int().positive().nullable(),
         }),
@@ -36,7 +39,7 @@ export async function createEvent(app: FastifyInstance) {
       });
 
       if (eventWithSameSlug !== null) {
-        throw new Error("Another event with same title already exists");
+        throw new BadRequest("Another event with same title already exists");
       }
 
       const event = await prisma.event.create({
